@@ -9,6 +9,7 @@ from pathlib import Path
 import numpy as np
 import torch
 from torch.utils.data import DataLoader, DistributedSampler
+from torch.utils.tensorboard import SummaryWriter
 
 import datasets
 import util.misc as utils
@@ -188,6 +189,9 @@ def main(args):
             utils.save_on_master(coco_evaluator.coco_eval["bbox"].eval, output_dir / "eval.pth")
         return
 
+    #cab
+    writer = SummaryWriter()
+
     print("Start training")
     start_time = time.time()
     for epoch in range(args.start_epoch, args.epochs):
@@ -214,6 +218,14 @@ def main(args):
         test_stats, coco_evaluator = evaluate(
             model, criterion, postprocessors, data_loader_val, base_ds, device, args.output_dir
         )
+
+        #cab
+        for k,v in train_stats.items():
+            writer.add_scalar(f'train_{k}', v, epoch)
+
+        for k,v in test_stats.items():
+            writer.add_scalar(f'train_{k}', v, epoch)
+        #/cab
 
         log_stats = {**{f'train_{k}': v for k, v in train_stats.items()},
                      **{f'test_{k}': v for k, v in test_stats.items()},
