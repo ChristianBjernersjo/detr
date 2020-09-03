@@ -80,6 +80,8 @@ def get_args_parser():
                         help="Relative classification weight of the no-object class")
 
     # dataset parameters
+    parser.add_argument('--num_classes', default=None, type=int,
+                        help='#classes in your dataset, which can override the value hard-coded in models/detr.py')
     parser.add_argument('--dataset_file', default='coco')
     parser.add_argument('--coco_path', type=str)
     parser.add_argument('--coco_panoptic_path', type=str)
@@ -176,7 +178,7 @@ def main(args):
                 args.resume, map_location='cpu', check_hash=True)
         else:
             checkpoint = torch.load(args.resume, map_location='cpu')
-        model_without_ddp.load_state_dict(checkpoint['model'])
+        model_without_ddp.load_state_dict(checkpoint['model'], strict=False)
         if not args.eval and 'optimizer' in checkpoint and 'lr_scheduler' in checkpoint and 'epoch' in checkpoint:
             optimizer.load_state_dict(checkpoint['optimizer'])
             lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
@@ -221,10 +223,45 @@ def main(args):
 
         #cab
         for k,v in train_stats.items():
-            writer.add_scalar(f'train_{k}', v, epoch)
+            if isinstance(v, float):
+                writer.add_scalar(f'train_{k}', v, epoch)
 
         for k,v in test_stats.items():
-            writer.add_scalar(f'train_{k}', v, epoch)
+            if (isinstance(v, float)):
+                writer.add_scalar(f'test_{k}', v, epoch)
+            if (k == "coco_eval_bbox"):
+                writer.add_scalar('Bbox Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ]', v[0], epoch)
+                writer.add_scalar('Bbox Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ]', v[1], epoch)
+                writer.add_scalar('Bbox Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ]', v[2], epoch)
+                writer.add_scalar('Bbox Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ]', v[3], epoch)
+                writer.add_scalar('Bbox Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ]', v[4], epoch)
+                writer.add_scalar('Bbox Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ]', v[5], epoch)
+                writer.add_scalar('Bbox Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ]', v[6], epoch)
+                writer.add_scalar('Bbox Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ]', v[7], epoch)
+                writer.add_scalar('Bbox Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ]', v[8], epoch)
+                writer.add_scalar('Bbox Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ]', v[9], epoch)
+                writer.add_scalar('Bbox Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ]', v[10], epoch)
+                writer.add_scalar('Bbox Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ]', v[11], epoch)
+
+            if (k == "coco_eval_masks"):
+                writer.add_scalar('Mask Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ]', v[0], epoch)
+                writer.add_scalar('Mask Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ]', v[1], epoch)
+                writer.add_scalar('Mask Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ]', v[2], epoch)
+                writer.add_scalar('Mask Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ]', v[3], epoch)
+                writer.add_scalar('Mask Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ]', v[4], epoch)
+                writer.add_scalar('Mask Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ]', v[5], epoch)
+                writer.add_scalar('Mask Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ]', v[6], epoch)
+                writer.add_scalar('Mask Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ]', v[7], epoch)
+                writer.add_scalar('Mask Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ]', v[8], epoch)
+                writer.add_scalar('Mask Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ]', v[9], epoch)
+                writer.add_scalar('Mask Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ]', v[10], epoch)
+                writer.add_scalar('Mask Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ]', v[11], epoch)
+
+
+
+
+
+                    
         #/cab
 
         log_stats = {**{f'train_{k}': v for k, v in train_stats.items()},
