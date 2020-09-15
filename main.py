@@ -5,6 +5,8 @@ import json
 import random
 import time
 from pathlib import Path
+from datetime import datetime
+
 
 import numpy as np
 import torch
@@ -102,6 +104,9 @@ def get_args_parser():
     parser.add_argument('--world_size', default=1, type=int,
                         help='number of distributed processes')
     parser.add_argument('--dist_url', default='env://', help='url used to set up distributed training')
+
+    # tensorboard naming
+    parser.add_argument('--tb_name', default='', type=str, help='Tensorboard name suffix, displayed on tensorboard')
     return parser
 
 
@@ -191,8 +196,13 @@ def main(args):
             utils.save_on_master(coco_evaluator.coco_eval["bbox"].eval, output_dir / "eval.pth")
         return
 
+
+
+    # datetime object containing current date and time
+    now = datetime.now()
+    dt_string = now.strftime("%Y_%m_%d-%H:%M") + " " + args.tb_name
     #cab
-    writer = SummaryWriter()
+    writer = SummaryWriter("runs/" + dt_string)
 
     print("Start training")
     start_time = time.time()
