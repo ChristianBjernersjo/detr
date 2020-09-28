@@ -312,6 +312,8 @@ def build(args):
         num_classes = num_classes_specified_at_run_time
     device = torch.device(args.device)
 
+    print('Criterion num classes ' + str(num_classes) )
+
     backbone = build_backbone(args)
 
     transformer = build_transformer(args)

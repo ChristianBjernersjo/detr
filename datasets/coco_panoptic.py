@@ -32,6 +32,7 @@ class CocoPanoptic:
         self.return_masks = return_masks
 
     def __getitem__(self, idx):
+
         ann_info = self.coco['annotations'][idx] if "annotations" in self.coco else self.coco['images'][idx]
         img_path = Path(self.img_folder) / ann_info['file_name'].replace('.png', '.jpg')
         ann_path = Path(self.ann_folder) / ann_info['file_name']
@@ -40,7 +41,9 @@ class CocoPanoptic:
         w, h = img.size
         if "segments_info" in ann_info:
             masks = np.asarray(Image.open(ann_path), dtype=np.uint32)
+            #torch.save(masks, 'masks1.pt')
             masks = rgb2id(masks)
+            #torch.save(masks, 'masks2.pt')
 
             ids = np.array([ann['id'] for ann in ann_info['segments_info']])
             masks = masks == ids[:, None, None]
@@ -50,6 +53,20 @@ class CocoPanoptic:
 
         target = {}
         target['image_id'] = torch.tensor([ann_info['image_id'] if "image_id" in ann_info else ann_info["id"]])
+
+        #if (target['image_id'] == 42):
+        #    print('42:')    
+        #    torch.save(masks, 'masks3.pt')
+
+        #print(target['image_id'])
+        #if (target['image_id'] == 57):
+        #    print('57')    
+        #    torch.save(masks, 'test_mask57.pt')
+
+        #if (target['image_id'] == 176):
+        #    print('176')    
+        #    torch.save(masks, 'test_mask176.pt')    
+
         if self.return_masks:
             target['masks'] = masks
         target['labels'] = labels

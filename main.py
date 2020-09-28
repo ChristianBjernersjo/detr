@@ -304,4 +304,16 @@ if __name__ == '__main__':
     args = parser.parse_args()
     if args.output_dir:
         Path(args.output_dir).mkdir(parents=True, exist_ok=True)
+
+    #args.tb_name = "OD 3class (T:5K, V:Z) P:2020_09_23-10:26" 
+    #args.dataset_file = "coco_panoptic"     
+    #args.coco_path = "/mnt/data2/datasets/detr/detr_doors (T:D, V:Z)/" 
+    #args.coco_panoptic_path = '/mnt/data2/datasets/detr/detr_doors_panoptic (T:D, V:Z)/' 
+    #args.frozen_weights = 'run_output_old/2020_09_23-10:26 OD 3class (T:5K, V:Z) P:r50/checkpoint.pth' 
+    #args.output_dir ="run_output" 
+    #args.num_classes = 3
+    #args.epochs = 5000 
+    #args.lr_drop = 100 
+    #args.masks =True
+    #args.batch_size =1
     main(args)
