@@ -42,57 +42,18 @@ class CocoPanoptic:
 
         target = {}
         target['image_id'] = torch.tensor([ann_info['image_id'] if "image_id" in ann_info else ann_info["id"]])
-        orig_debug = 0
-        rgb2id_debug = 0
-        mask_after_mask_debug = 0
-
 
         if "segments_info" in ann_info:
             masks = np.asarray(Image.open(ann_path), dtype=np.uint32)
-            #torch.save(masks, 'masks1' + str(target['image_id']) + '.pt')
-            # if (target['image_id'] == 1238):
-            #     torch.save(masks, 'orig_mask' + str(target['image_id']) + '.pt') 
-            
-
 
             masks = rgb2id(masks)
-            # if (target['image_id'] == 1238):
-            #     torch.save(masks, 'rgb2id' + str(target['image_id']) + '.pt') 
-
 
             ids = np.array([ann['id'] for ann in ann_info['segments_info']])
-            # if (target['image_id'] == 1238):
-            #     print(ids)
-
 
             masks = masks == ids[:, None, None]
-
-            # if (target['image_id'] == 1238):
-            #     torch.save(masks, 'mask_mask' + str(target['image_id']) + '.pt') 
-
-
             masks = torch.as_tensor(masks, dtype=torch.uint8)
 
-
             labels = torch.tensor([ann['category_id'] for ann in ann_info['segments_info']], dtype=torch.int64)
-
-
-
-        #if (target['image_id'] == 851):
-        #    print('851')    
-        #torch.save(masks, 'test_mask' + str(target['image_id']) + '.pt')
-
-        # print(target['image_id'])
-        #if (target['image_id'] == 57):
-        #    print('57')    
-        #    torch.save(masks, 'test_mask57.pt')
-        # print(target['image_id'])
-
-       
-        # if (target['image_id'] == 842):
-        #     print('842')
-        #     torch.save(masks, 'masks3' + str(target['image_id']) + '.pt')         
-
 
 
         if self.return_masks:
@@ -103,9 +64,6 @@ class CocoPanoptic:
         if target["boxes"] == None:
             print(target['image_id'])
             print(labels)
-
-
-
 
         target['size'] = torch.as_tensor([int(h), int(w)])
         target['orig_size'] = torch.as_tensor([int(h), int(w)])
