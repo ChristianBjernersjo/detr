@@ -85,4 +85,14 @@ def masks_to_boxes(masks):
     y_max = y_mask.flatten(1).max(-1)[0]
     y_min = y_mask.masked_fill(~(masks.bool()), 1e8).flatten(1).min(-1)[0]
 
+
+    # print("bbox calculated = " + str(x_min) + ', ' + str(y_min) + ', ' + str(x_max) + ', ' + str(y_max))
+    for x in x_min:
+        if x >= 1e8:
+            return None
+    for x in y_min:
+        if x >= 1e8:
+            return None
+
+
     return torch.stack([x_min, y_min, x_max, y_max], 1)
