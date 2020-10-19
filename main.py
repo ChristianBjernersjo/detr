@@ -198,13 +198,13 @@ def main(args):
 
 
 
-    # datetime object containing current date and time
-    now = datetime.now()
-    dt_string = now.strftime("%Y_%m_%d-%H:%M") + " " + args.tb_name
     #cab
-    writer = SummaryWriter("runs/" + dt_string)
+    writer = SummaryWriter("runs/" + args.tb_name)
+    
+    
+    best_value = 0
 
-    print("Start training")
+    print("Start training, best_value is " + str(best_value))
     start_time = time.time()
     for epoch in range(args.start_epoch, args.epochs):
         if args.distributed:
@@ -213,19 +213,10 @@ def main(args):
             model, criterion, data_loader_train, optimizer, device, epoch,
             args.clip_max_norm)
         lr_scheduler.step()
-        if args.output_dir:
-            checkpoint_paths = [output_dir / 'checkpoint.pth']
-            # extra checkpoint before LR drop and every 100 epochs
-            if (epoch + 1) % args.lr_drop == 0 or (epoch + 1) % 100 == 0:
-                checkpoint_paths.append(output_dir / f'checkpoint{epoch:04}.pth')
-            for checkpoint_path in checkpoint_paths:
-                utils.save_on_master({
-                    'model': model_without_ddp.state_dict(),
-                    'optimizer': optimizer.state_dict(),
-                    'lr_scheduler': lr_scheduler.state_dict(),
-                    'epoch': epoch,
-                    'args': args,
-                }, checkpoint_path)
+        
+        
+        
+  
 
         test_stats, coco_evaluator = evaluate(
             model, criterion, postprocessors, data_loader_val, base_ds, device, args.output_dir
@@ -236,10 +227,13 @@ def main(args):
             if isinstance(v, float):
                 writer.add_scalar(f'train_{k}', v, epoch)
 
+
+        new_value = 0
         for k,v in test_stats.items():
             if (isinstance(v, float)):
                 writer.add_scalar(f'test_{k}', v, epoch)
             if (k == "coco_eval_bbox"):
+                new_value = v[0]
                 writer.add_scalar('Bbox Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ]', v[0], epoch)
                 writer.add_scalar('Bbox Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ]', v[1], epoch)
                 writer.add_scalar('Bbox Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ]', v[2], epoch)
@@ -254,6 +248,7 @@ def main(args):
                 writer.add_scalar('Bbox Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ]', v[11], epoch)
 
             if (k == "coco_eval_masks"):
+                new_value = v[0]
                 writer.add_scalar('Mask Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ]', v[0], epoch)
                 writer.add_scalar('Mask Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ]', v[1], epoch)
                 writer.add_scalar('Mask Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ]', v[2], epoch)
@@ -268,10 +263,35 @@ def main(args):
                 writer.add_scalar('Mask Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ]', v[11], epoch)
 
 
+        print("Epoch finished, best_value is " + str(best_value))
+
+        save_pth = False
+        if best_value < new_value:
+            best_value = new_value
+            save_pth = True
 
 
+        if args.output_dir:
+            checkpoint_paths = [output_dir / 'checkpoint.pth']
+            # extra checkpoint before LR drop and every 100 epochs
+            if (epoch + 1) % args.lr_drop == 0 or (epoch + 1) % 100 == 0:
+                checkpoint_paths.append(output_dir / f'checkpoint{epoch:04}.pth')
+            
+            if save_pth:
+                checkpoint_paths.append(output_dir / f'best.pth')
+                bestLog = open(output_dir / 'best_log.txt', 'w+')
+                bestLog.write(f'Saved model at epoch {epoch:04}\n')
 
-                    
+            for checkpoint_path in checkpoint_paths:
+                utils.save_on_master({
+                    'model': model_without_ddp.state_dict(),
+                    'optimizer': optimizer.state_dict(),
+                    'lr_scheduler': lr_scheduler.state_dict(),
+                    'epoch': epoch,
+                    'args': args,
+                }, checkpoint_path)
+
+
         #/cab
 
         log_stats = {**{f'train_{k}': v for k, v in train_stats.items()},
