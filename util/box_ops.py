@@ -89,9 +89,11 @@ def masks_to_boxes(masks):
     # print("bbox calculated = " + str(x_min) + ', ' + str(y_min) + ', ' + str(x_max) + ', ' + str(y_max))
     for x in x_min:
         if x >= 1e8:
+            print("bbox calculated = " + str(x_min) + ', ' + str(y_min) + ', ' + str(x_max) + ', ' + str(y_max))
             return None
     for x in y_min:
         if x >= 1e8:
+            print("bbox calculated = " + str(x_min) + ', ' + str(y_min) + ', ' + str(x_max) + ', ' + str(y_max))
             return None
 
 
